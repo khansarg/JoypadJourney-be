@@ -47,9 +47,12 @@ public class CustomerService {
         user.setRole(Role.CUSTOMER);
         userRepository.save(user);
 
+        // Refresh user setelah disimpan
+        user = userRepository.findById(user.getUsername()).orElseThrow(() -> 
+            new IllegalStateException("User not found after save"));
         // Simpan ke tabel customer
         Customer customer = new Customer();
-        customer.setUsername(user.getUsername());
+        customer.setUser(user);
         customer.setEmail(request.getEmail());
         customer.setPhoneNumber(request.getPhoneNum());
         customer.setFirstName(request.getFirstName());

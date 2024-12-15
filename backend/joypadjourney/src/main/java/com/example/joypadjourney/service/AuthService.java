@@ -28,6 +28,10 @@ public class AuthService {
 
     public ResponseEntity<LoginResponse> login(LoginRequest request){
         validationService.validate(request);
+        if (request.getEmail() == null && request.getUsername() == null) {
+            throw new RuntimeException("Email atau Username harus diisi.");
+        }
+        
         if(request.getEmail()!=null){
             Customer customer = customerRepository.findByEmail(request.getEmail())
                 .orElseThrow(()-> new RuntimeException("Akun dengan email tersebut tidak ditemukan"));

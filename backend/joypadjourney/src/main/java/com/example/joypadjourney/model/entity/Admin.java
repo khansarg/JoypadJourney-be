@@ -24,6 +24,6 @@ public class Admin {
 
     @OneToOne
     @MapsId
-    @JoinColumn(name = "username", referencedColumnName = "username")
+    @JoinColumn(name = "username")
     private User user;
 }
