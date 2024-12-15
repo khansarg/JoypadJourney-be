@@ -27,25 +27,27 @@ public class CustomerService {
     private ValidationService validationService;
 
     @Transactional
-    public void register(RegisterCustomerRequest request){
-       validationService.validate(request);
+    public void register(RegisterCustomerRequest request) {
+        validationService.validate(request);
 
-        //pengecekan apakah username udah ada
-        if(customerRepository.existsById(request.getUsername())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Username tersebut sudah digunakan");
-        }
-        // Cek apakah email sudah digunakan
-        if (customerRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Email tersebut sudah digunakan");
-        }
         
-        //menyimpan ke tabel user dulu
+        if (customerRepository.existsById(request.getUsername())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username tersebut sudah digunakan");
+        }
+
+        
+        if (customerRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email tersebut sudah digunakan");
+        }
+
+        // Simpan ke tabel user dulu
         User user = new User();
         user.setUsername(request.getUsername());
         user.setPassword(BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()));
         user.setRole(Role.CUSTOMER);
         userRepository.save(user);
 
+        // Simpan ke tabel customer
         Customer customer = new Customer();
         customer.setUsername(user.getUsername());
         customer.setEmail(request.getEmail());
@@ -53,7 +55,6 @@ public class CustomerService {
         customer.setFirstName(request.getFirstName());
         customer.setLastName(request.getLastName());
         customerRepository.save(customer);
-
-
     }
 }
+

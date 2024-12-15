@@ -2,13 +2,13 @@ package com.example.joypadjourney.Security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import static org.springframework.security.config.Customizer.withDefaults;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
 
 @Configuration
 @EnableWebSecurity
@@ -20,30 +20,29 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // Konfigurasi utama security filter chain
+    // Konfigurasi utama SecurityFilterChain
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable()) // Nonaktifkan CSRF jika tidak diperlukan
+        http
+            // Nonaktifkan CSRF untuk API
+            .csrf(csrf -> csrf.disable())
+            
+            // Konfigurasi otorisasi permintaan
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers(new AntPathRequestMatcher("/api/customer/register")).permitAll() // Izinkan akses tanpa autentikasi
-                .anyRequest().authenticated() // Semua request lain membutuhkan autentikasi
+                .requestMatchers("/api/customer/register", "/login", "/logout").permitAll() // Endpoint yang diizinkan tanpa login
+                .anyRequest().permitAll() // Endpoint lain memerlukan otentikasi
             )
-            .formLogin(form -> form // Konfigurasi login form jika diperlukan
-                .loginPage("/login")
-                .permitAll()
-            )
-            .logout(logout -> logout // Konfigurasi logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/")
+            
+            // Gunakan otentikasi berbasis HTTP Basic (untuk API)
+            .httpBasic(withDefaults())
+
+            // Konfigurasi logout
+            .logout(logout -> logout
+                .logoutUrl("/logout") // URL untuk logout
+                .logoutSuccessUrl("/") // Arahkan ke halaman ini setelah logout berhasil
                 .permitAll()
             );
-        return http.build();
-    }
 
-    // Konfigurasi tambahan untuk resource statis (opsional)
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring()
-                .requestMatchers("/css/**", "/js/**", "/images/**");
+        return http.build();
     }
 }

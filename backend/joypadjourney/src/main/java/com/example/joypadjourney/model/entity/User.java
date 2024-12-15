@@ -1,6 +1,5 @@
 package com.example.joypadjourney.model.entity;
 
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -8,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,8 +24,10 @@ public class User{
     
     @NotNull
     @Id
+    @Size(max=50)
     private String username;
     @NotNull
+    @Size(max = 255)
     private String password;
     @Enumerated(EnumType.STRING)
     @NotNull

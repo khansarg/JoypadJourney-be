@@ -7,13 +7,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
 @Entity
+@Data
 @Table(name = "Payment")
 public class Payment {
 
     @Id
-    private String paymentID;
+    @NotNull
+    private String paymentid;
 
     private double totalPrice;
     private String statusPayment;
@@ -24,37 +28,5 @@ public class Payment {
 
     private LocalDateTime timestamp;
 
-    // Getter
-    public String getPaymentID(){
-        return paymentID;
-    }
-    public double getTotalPrice(){
-        return totalPrice;
-    }
-    public String getStatusPayment(){
-        return statusPayment;
-    }
-    public Reservation getReservationID(){
-        return reservation;
-    }
-    public LocalDateTime getTimeStamp(){
-        return timestamp;
-    }
-    //setter
-    public void setPaymentID(String paymentID){
-        this.paymentID=paymentID;
-    }
-    public void setTotalPrice(double totalPrice){
-        this.totalPrice=totalPrice;
-    }
-    public void setStatusPayment(String statusPayment){
-        this.statusPayment=statusPayment;
-    }
-    public void setReservationID(Reservation reservation){
-        this.reservation = reservation;
-    }
-    public void setTimeStamp(LocalDateTime timestamp){
-        this.timestamp = timestamp;
-    }
 }
 
