@@ -39,7 +39,7 @@ public class SecurityConfig {
             // Konfigurasi logout
             .logout(logout -> logout
                 .logoutUrl("/logout") // URL untuk logout
-                .logoutSuccessUrl("/") // Arahkan ke halaman ini setelah logout berhasil
+                .logoutSuccessUrl("/login") // Arahkan ke halaman ini setelah logout berhasil
                 .permitAll()
             );
 

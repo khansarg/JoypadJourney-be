@@ -2,7 +2,6 @@ package com.example.joypadjourney.controller;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.joypadjourney.model.entity.Reservation;
-import com.example.joypadjourney.model.entity.Room;
 import com.example.joypadjourney.service.ReservationService;
 
 @RestController
@@ -31,8 +29,7 @@ public class ReservationController {
         LocalDateTime startDateTime = LocalDateTime.parse(date + "T" + startTime);
         LocalDateTime endDateTime = LocalDateTime.parse(date + "T" + endTime);
 
-        List<Room> availableRooms = reservationService.getAvailableRooms(startDateTime, endDateTime);
-        return ResponseEntity.ok(availableRooms);
+        return ResponseEntity.ok(reservationService.getAvailableRooms(startDateTime, endDateTime));
     }
 
     // Endpoint untuk membuat reservasi
@@ -40,27 +37,12 @@ public class ReservationController {
     public ResponseEntity<?> createReservation(@RequestParam String roomName,
                                                @RequestParam String start,
                                                @RequestParam String end,
-                                               Principal principal) { // Ambil user login
-        String username = principal.getName(); // Username dari session
+                                               Principal principal) {
+        String username = principal.getName(); // Username otomatis dari user yang login
 
-        // Buat reservasi
+        
         Reservation reservation = reservationService.createReservation(username, roomName, start, end);
         return ResponseEntity.ok(reservation);
     }
-
-    // Endpoint khusus untuk admin (opsional jika diperlukan logika tambahan)
-    @PostMapping("/admin/create")
-    public ResponseEntity<?> adminCreateReservation(@RequestParam String customerUsername,
-                                                    @RequestParam String roomName,
-                                                    @RequestParam String start,
-                                                    @RequestParam String end,
-                                                    Principal principal) {
-        // Ambil username admin
-        String adminUsername = principal.getName();
-
-        // Admin membuat reservasi atas nama customer
-        Reservation reservation = reservationService.adminCreateReservation(adminUsername, customerUsername, roomName, start, end);
-        return ResponseEntity.ok(reservation);
-    }
+    
 }
-
