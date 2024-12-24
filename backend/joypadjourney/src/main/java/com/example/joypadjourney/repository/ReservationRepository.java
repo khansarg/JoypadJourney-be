@@ -14,5 +14,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, String
     @Query("SELECT COUNT(r) FROM Reservation r WHERE r.user.username = :username")
     long countByUsername(@Param("username") String username);
     List<Reservation> findByStartDateTimeBetween(LocalDateTime start, LocalDateTime end);
+    List<Reservation> findByEndDateTimeBetween(LocalDateTime start, LocalDateTime end);
 
 }

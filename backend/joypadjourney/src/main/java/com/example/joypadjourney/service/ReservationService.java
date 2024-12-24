@@ -85,7 +85,7 @@ public class ReservationService {
     }
 
     // Hitung Total Harga
-    private double calculateTotalPrice(LocalDateTime start, LocalDateTime end, double pricePerHour) {
+    public double calculateTotalPrice(LocalDateTime start, LocalDateTime end, double pricePerHour) {
         long hours = java.time.Duration.between(start, end).toHours();
         return hours * pricePerHour;
     }
@@ -120,4 +120,5 @@ public class ReservationService {
             System.out.println("Reminder sent to: " + email);
         }
     }
+
 }

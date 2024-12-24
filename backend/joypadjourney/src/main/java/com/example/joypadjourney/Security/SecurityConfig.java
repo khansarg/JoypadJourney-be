@@ -30,7 +30,10 @@ public class SecurityConfig {
             // Konfigurasi otorisasi permintaan
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/customer/register", "/login", "/logout").permitAll() // Endpoint yang diizinkan tanpa login
-                .anyRequest().permitAll() // Endpoint lain memerlukan otentikasi
+                .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
+                
+                // Akses untuk endpoint Admin (ROLE_ADMIN)
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
             )
             
             // Gunakan otentikasi berbasis HTTP Basic (untuk API)
