@@ -8,11 +8,18 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final JwtFilter jwtFilter;
+
+    public SecurityConfig(JwtFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
 
     // Bean untuk password encoder
     @Bean
@@ -26,14 +33,19 @@ public class SecurityConfig {
         http
             // Nonaktifkan CSRF untuk API
             .csrf(csrf -> csrf.disable())
-            
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
             // Konfigurasi otorisasi permintaan
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/customer/register", "/login", "/logout").permitAll() // Endpoint yang diizinkan tanpa login
+                .requestMatchers("/api/customer/register").permitAll()
+                // Endpoint login diizinkan tanpa autentikasi
+                .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
                 
                 // Akses untuk endpoint Admin (ROLE_ADMIN)
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                
+                // Endpoint lainnya harus autentikasi
+                .anyRequest().authenticated()
             )
             
             // Gunakan otentikasi berbasis HTTP Basic (untuk API)
