@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.example.joypadjourney.model.entity.Customer;
@@ -18,6 +19,8 @@ import com.example.joypadjourney.repository.PaymentRepository;
 import com.example.joypadjourney.repository.ReservationRepository;
 import com.example.joypadjourney.repository.RoomRepository;
 import com.example.joypadjourney.repository.UserRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class ReservationService {
@@ -32,20 +35,22 @@ public class ReservationService {
 
     @Autowired
     private RoomRepository roomRepository;
+
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private EmailService emailService;
-
+    @Autowired
+    private NotificationService notificationService;
     
-    public Reservation createReservation(String username, String roomName, String start, String end) {
-         // Hitung jumlah reservasi yang telah dilakukan customer
-         long reservationCount = reservationRepository.countByUsername(username);
+    public Reservation createReservation(String roomName, String start, String end) {
 
-         User user = userRepository.findByUsername(username)
-         .orElseThrow(() -> new RuntimeException("User not found"));
+        // Ambil username dari JWT melalui SecurityContextHolder
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        long reservationCount = reservationRepository.countByUsername(username);
 
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
         // Parse waktu mulai dan selesai
         LocalDateTime startDateTime = LocalDateTime.parse(start);
         LocalDateTime endDateTime = LocalDateTime.parse(end);
@@ -80,7 +85,7 @@ public class ReservationService {
         payment.setStatusPayment("PENDING");
         
         paymentRepository.save(payment);
-
+        scheduleReservationNotification(user.getUsername(), room.getRoomName(), reservation);
         return reservation;
     }
 
@@ -119,6 +124,36 @@ public class ReservationService {
             emailService.sendReminderEmail(email, subject, body);
             System.out.println("Reminder sent to: " + email);
         }
+
+    }
+    private void scheduleReservationNotification(String username, String roomName, Reservation reservation) {
+        // Waktu notifikasi: 30 menit sebelum reservasi berakhir
+        LocalDateTime notificationTime = reservation.getEndDateTime().minusMinutes(35);
+    
+        // Pesan notifikasi
+        String message = "Your reservation for room " + roomName
+                + " will end at " + reservation.getEndDateTime()
+                + ". Please extend it if needed.";
+    
+        // Jadwalkan pengiriman notifikasi menggunakan NotificationService
+        notificationService.scheduleNotification(username, message, notificationTime);
+    }
+    // Periksa reservasi yang selesai setiap 1 jam
+    @Scheduled(fixedRate = 3600000) // Setiap 1 jam
+    @Transactional
+    public void updateCompletedReservations() {
+        LocalDateTime now = LocalDateTime.now();
+
+        // Ambil semua reservasi yang berakhir sebelum sekarang dan belum memiliki status COMPLETED
+        List<Reservation> reservations = reservationRepository.findByEndDateTimeBeforeAndStatusNot(now, "COMPLETED");
+
+        for (Reservation reservation : reservations) {
+            // Perbarui status menjadi COMPLETED
+            reservation.setStatus("COMPLETED");
+            reservationRepository.save(reservation);
+        }
+
+        System.out.println("Updated " + reservations.size() + " reservations to COMPLETED status.");
     }
 
 }

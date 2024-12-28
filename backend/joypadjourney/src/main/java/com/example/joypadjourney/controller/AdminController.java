@@ -34,10 +34,8 @@ public class AdminController {
                                                @RequestParam String start,
                                                @RequestParam String end,
                                                Principal principal) {
-        String username = principal.getName(); // Username otomatis dari user yang login
-
         
-        Reservation reservation = reservationService.createReservation(username, roomName, start, end);
+        Reservation reservation = reservationService.createReservation( roomName, start, end);
         return ResponseEntity.ok(reservation);
     }
     @PostMapping("/confirm")
@@ -52,16 +50,13 @@ public class AdminController {
     }
 
     // Extend a reservation
-    @PutMapping("/reservations/{reservationID}/extend")
-    public Reservation extendReservation(
-            @PathVariable String reservationID,
-            @RequestParam String newStart,
-            @RequestParam String newEnd) {
-
-        LocalDateTime startDateTime = LocalDateTime.parse(newStart);
-        LocalDateTime endDateTime = LocalDateTime.parse(newEnd);
-
-        return adminService.extendReservation(reservationID, startDateTime, endDateTime);
+    @PutMapping("/reservations/{reservationId}/extend")
+    public ResponseEntity<Reservation> extendReservation(
+            @PathVariable String reservationId,
+            @RequestParam LocalDateTime newEnd, 
+            @RequestParam String roomName) {
+        Reservation updatedReservation = adminService.extendReservation(reservationId, null, newEnd, roomName);
+        return ResponseEntity.ok(updatedReservation);
     }
 
     // Delete a reservation

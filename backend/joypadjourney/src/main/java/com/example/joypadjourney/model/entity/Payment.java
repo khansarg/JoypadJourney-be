@@ -1,7 +1,5 @@
 package com.example.joypadjourney.model.entity;
 
-import java.time.LocalDateTime;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -20,12 +18,6 @@ public class Payment {
     private double totalPrice;
 
     private String statusPayment; // PENDING, SUCCESS, CANCELED
-
-    private String qrisUrl; // URL atau kode QRIS dinamis yang digenerate
-
-    private LocalDateTime timestamp; // Waktu pembayaran dibuat
-
-    private LocalDateTime expiryTime; // Waktu expired pembayaran
 
     @OneToOne
     @JoinColumn(name = "reservationID", referencedColumnName = "reservationID")

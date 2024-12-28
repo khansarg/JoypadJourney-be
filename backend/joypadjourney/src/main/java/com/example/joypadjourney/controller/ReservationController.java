@@ -1,9 +1,12 @@
 package com.example.joypadjourney.controller;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,26 +26,36 @@ public class ReservationController {
 
     // Endpoint untuk menampilkan room yang tersedia
     @GetMapping("/available-rooms")
-    public ResponseEntity<?> getAvailableRooms(@RequestParam String date,
-                                               @RequestParam String startTime,
-                                               @RequestParam String endTime) {
-        LocalDateTime startDateTime = LocalDateTime.parse(date + "T" + startTime);
-        LocalDateTime endDateTime = LocalDateTime.parse(date + "T" + endTime);
+    public ResponseEntity<?> getAvailableRooms(HttpServletRequest request,
+                                               @RequestParam String startDateTime,
+                                               @RequestParam String endDateTime) {
+    // Mendapatkan header Authorization
+    System.out.println("Start DateTime: " + startDateTime);
+    System.out.println("End DateTime: " + endDateTime);
 
-        return ResponseEntity.ok(reservationService.getAvailableRooms(startDateTime, endDateTime));
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid Authorization header");
+        }
+
+        try {
+            LocalDateTime startDT = LocalDateTime.parse(startDateTime);
+            LocalDateTime endDT = LocalDateTime.parse(endDateTime);
+
+            return ResponseEntity.ok(reservationService.getAvailableRooms(startDT, endDT));
+        } catch (DateTimeParseException e) {
+            return ResponseEntity.badRequest().body("Invalid date or time format. Use 'YYYY-MM-DD' and 'HH:mm'.");
+        }
     }
 
     // Endpoint untuk membuat reservasi
-    @PostMapping("/create")
-    public ResponseEntity<?> createReservation(@RequestParam String roomName,
-                                               @RequestParam String start,
-                                               @RequestParam String end,
-                                               Principal principal) {
-        String username = principal.getName(); // Username otomatis dari user yang login
-
-        
-        Reservation reservation = reservationService.createReservation(username, roomName, start, end);
+    @PostMapping("/reservations")
+    public ResponseEntity<Reservation> createReservation(
+        @RequestParam String roomName,
+        @RequestParam String start,
+        @RequestParam String end) {
+        Reservation reservation = reservationService.createReservation(roomName, start, end);
         return ResponseEntity.ok(reservation);
     }
-    
+
 }

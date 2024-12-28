@@ -6,13 +6,16 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.joypadjourney.model.ReservationExtender;
 import com.example.joypadjourney.model.entity.Payment;
 import com.example.joypadjourney.model.entity.Reservation;
+import com.example.joypadjourney.model.entity.Room;
 import com.example.joypadjourney.repository.PaymentRepository;
 import com.example.joypadjourney.repository.ReservationRepository;
+import com.example.joypadjourney.repository.RoomRepository;
 
 @Service
-public class AdminService {
+public class AdminService implements ReservationExtender{
 
     @Autowired
     private ReservationRepository reservationRepository;
@@ -23,13 +26,17 @@ public class AdminService {
     @Autowired
     private ReservationService reservationService; // Inject ReservationService
 
+    @Autowired
+    private RoomRepository roomRepository;
+
     // View all reservations
     public List<Reservation> viewReservation() {
         return reservationRepository.findAll();
     }
 
     // Extend reservation
-    public Reservation extendReservation(String reservationId, LocalDateTime newStart, LocalDateTime newEnd) {
+    @Override
+    public Reservation extendReservation(String reservationId, LocalDateTime newStart, LocalDateTime newEnd, String roomName) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
 
@@ -41,9 +48,13 @@ public class AdminService {
         }
 
         // Update waktu reservasi
+        newStart = reservation.getEndDateTime();
         reservation.setStartDateTime(newStart);
         reservation.setEndDateTime(newEnd);
-
+        Room room = roomRepository.findById(roomName)
+                .orElseThrow(() -> new RuntimeException("Room not found")); 
+        // Perbarui data reservasi
+        reservation.setRoom(room);
         // Hitung ulang harga menggunakan ReservationService
         double newPrice = reservationService.calculateTotalPrice(newStart, newEnd, reservation.getRoom().getPricePerHour());
         reservation.setPrice(newPrice);
