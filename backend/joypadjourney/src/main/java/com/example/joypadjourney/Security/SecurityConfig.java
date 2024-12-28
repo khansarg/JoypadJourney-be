@@ -29,35 +29,31 @@ public class SecurityConfig {
 
     // Konfigurasi utama SecurityFilterChain
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            // Nonaktifkan CSRF untuk API
-            .csrf(csrf -> csrf.disable())
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-            // Konfigurasi otorisasi permintaan
-            .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/customer/register").permitAll()
-                // Endpoint login diizinkan tanpa autentikasi
-                .requestMatchers("/api/auth/login").permitAll()
-                .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
-                
-                // Akses untuk endpoint Admin (ROLE_ADMIN)
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                
-                // Endpoint lainnya harus autentikasi
-                .anyRequest().authenticated()
-            )
-            
-            // Gunakan otentikasi berbasis HTTP Basic (untuk API)
-            .httpBasic(withDefaults())
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        // Aktifkan CORS
+        .cors(withDefaults())
+        // Nonaktifkan CSRF untuk API
+        .csrf(csrf -> csrf.disable())
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+        // Konfigurasi otorisasi permintaan
+        .authorizeHttpRequests(authorize -> authorize
+            .requestMatchers("/api/customer/register").permitAll()
+            .requestMatchers("/api/auth/login").permitAll()
+            .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+            .anyRequest().authenticated()
+        )
+        // Gunakan otentikasi berbasis HTTP Basic (untuk API)
+        .httpBasic(withDefaults())
+        // Konfigurasi logout
+        .logout(logout -> logout
+            .logoutUrl("/logout")
+            .logoutSuccessUrl("/login")
+            .permitAll()
+        );
 
-            // Konfigurasi logout
-            .logout(logout -> logout
-                .logoutUrl("/logout") // URL untuk logout
-                .logoutSuccessUrl("/login") // Arahkan ke halaman ini setelah logout berhasil
-                .permitAll()
-            );
+    return http.build();
+}
 
-        return http.build();
-    }
 }
