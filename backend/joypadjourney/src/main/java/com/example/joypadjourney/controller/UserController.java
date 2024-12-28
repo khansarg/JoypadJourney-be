@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.example.joypadjourney.Security.JwtUtil;
 import com.example.joypadjourney.model.entity.User;
@@ -13,14 +15,15 @@ import com.example.joypadjourney.repository.UserRepository;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
-
+@RestController
+@RequestMapping("/api/user")
 public class UserController {
     @Autowired
     JwtUtil jwtUtil;
 
     @Autowired
     UserRepository userRepository;
-    @GetMapping("/api/user/me")
+    @GetMapping("/me")
     public ResponseEntity<?> getUserProfile(HttpServletRequest request) {
     String authHeader = request.getHeader("Authorization");
     if (authHeader == null || !authHeader.startsWith("Bearer ")) {

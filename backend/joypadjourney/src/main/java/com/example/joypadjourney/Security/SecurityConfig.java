@@ -40,9 +40,9 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
         .authorizeHttpRequests(authorize -> authorize
             .requestMatchers("/api/customer/register").permitAll()
             .requestMatchers("/api/auth/login").permitAll()
-            .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
-            .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            .anyRequest().authenticated()
+            .requestMatchers("/api/customer/**").hasRole("Customer")
+            .requestMatchers("/api/admin/**").hasRole("Admin")
+            .anyRequest().permitAll()
         )
         // Gunakan otentikasi berbasis HTTP Basic (untuk API)
         .httpBasic(withDefaults())

@@ -15,6 +15,7 @@ public class CorsConfig {
         configuration.addAllowedOrigin("http://localhost:3000"); // URL frontend
         configuration.addAllowedMethod("*"); // Mengizinkan semua metode (GET, POST, dll)
         configuration.addAllowedHeader("*"); // Mengizinkan semua header
+        configuration.addExposedHeader("Authorization"); // Membiarkan header Authorization digunakan
         configuration.setAllowCredentials(true); // Mengizinkan pengiriman cookie/token
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
