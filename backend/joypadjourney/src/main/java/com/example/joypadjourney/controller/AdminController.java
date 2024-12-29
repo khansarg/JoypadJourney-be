@@ -1,6 +1,5 @@
 package com.example.joypadjourney.controller;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,15 +28,6 @@ public class AdminController {
     private PaymentService paymentService;
      @Autowired
     private AdminService adminService;
-     @PostMapping("/create")
-    public ResponseEntity<?> createReservation(@RequestParam String roomName,
-                                               @RequestParam String start,
-                                               @RequestParam String end,
-                                               Principal principal) {
-        
-        Reservation reservation = reservationService.createReservation( roomName, start, end);
-        return ResponseEntity.ok(reservation);
-    }
     @PostMapping("/confirm")
     public ResponseEntity<?> confirmPayment(@RequestParam String reservationID) {
         paymentService.confirmPayment(reservationID);

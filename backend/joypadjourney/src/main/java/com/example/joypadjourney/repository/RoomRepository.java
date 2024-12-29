@@ -2,6 +2,7 @@ package com.example.joypadjourney.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,5 +22,5 @@ public interface RoomRepository extends JpaRepository<Room, String> {
     List<Room> findAvailableRooms(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     // 3. Cari room berdasarkan nama room
-    Room findByRoomName(String roomName);
+    Optional<Room> findByRoomName(String roomName);
 }

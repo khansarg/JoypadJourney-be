@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.example.joypadjourney.model.entity.Customer;
@@ -20,6 +19,8 @@ import com.example.joypadjourney.repository.ReservationRepository;
 import com.example.joypadjourney.repository.RoomRepository;
 import com.example.joypadjourney.repository.UserRepository;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -42,12 +43,27 @@ public class ReservationService {
     private EmailService emailService;
     @Autowired
     private NotificationService notificationService;
-    
-    public Reservation createReservation(String roomName, String start, String end) {
+    private final String jwtSecret = "your-256-bit-secret-your-256-bit-secret"; // Sesuaikan dengan kunci rahasia Anda
+
+    public String extractUsernameFromToken(String token) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7); // Hapus "Bearer " di awal token
+        }
+
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(jwtSecret.getBytes())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.getSubject(); // `sub` di JWT adalah username
+    }
+    public Reservation createReservation(String roomName, String start, String end, String authHeader) {
 
         // Ambil username dari JWT melalui SecurityContextHolder
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        long reservationCount = reservationRepository.countByUsername(username);
+        String username = extractUsernameFromToken(authHeader); // Ambil username dari token
+        System.out.println("Username from token: " + username);
+        long reservationCount = getReservationCount(username);
 
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new RuntimeException("User not found"));
@@ -56,16 +72,20 @@ public class ReservationService {
         LocalDateTime endDateTime = LocalDateTime.parse(end);
 
         // Ambil Room
-        Room room = roomRepository.findById(roomName)
+        Room room = roomRepository.findByRoomName(roomName)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 
         // Generate Reservation ID
         String reservationId = "RNEYJ" + UUID.randomUUID().toString().substring(0, 8);
         double totalH = calculateTotalPrice(startDateTime, endDateTime, room.getPricePerHour());
         //bwat promo
-        if (reservationCount>=10){
-            totalH = totalH * 0.1;
+        
+        if (reservationCount==10){
+            double discount = totalH * 0.1;
+            totalH = totalH - discount;
         }
+        
+        
         // Buat Reservasi
         Reservation reservation = new Reservation();
         reservation.setReservationID(reservationId);
@@ -88,7 +108,9 @@ public class ReservationService {
         scheduleReservationNotification(user.getUsername(), room.getRoomName(), reservation);
         return reservation;
     }
-
+    public long getReservationCount(String username) {
+        return reservationRepository.countByUsername(username);
+    }
     // Hitung Total Harga
     public double calculateTotalPrice(LocalDateTime start, LocalDateTime end, double pricePerHour) {
         long hours = java.time.Duration.between(start, end).toHours();
@@ -155,5 +177,9 @@ public class ReservationService {
 
         System.out.println("Updated " + reservations.size() + " reservations to COMPLETED status.");
     }
-
+    public void deleteReservationById(String reservationID) {
+        paymentRepository.deleteByReservationId(reservationID);
+        reservationRepository.deleteById(reservationID);
+    }
+    
 }
