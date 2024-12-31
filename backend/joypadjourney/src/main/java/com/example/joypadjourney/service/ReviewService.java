@@ -33,17 +33,17 @@ public class ReviewService {
 
         Reservation reservation = optionalReservation.get();
 
-        // Pastikan reservasi selesai
+        //memastikan reservasi selesai
         if (!"COMPLETED".equalsIgnoreCase(reservation.getStatus())) {
             throw new IllegalStateException("Cannot review a reservation that is not completed.");
         }
 
-        // Pastikan review belum ada untuk reservasi ini
+        //memaastikan review belum ada untuk reservasi ini
         if (reviewRepository.existsByReservationReservationID(reservationID)) {
             throw new IllegalStateException("Review already exists for this reservation.");
         }
 
-        // Simpan review
+        // nyiimpen review
         review.setReservation(reservation);
         review.setUser(reservation.getUser());
         review.setTanggal(LocalDateTime.now());

@@ -31,7 +31,14 @@ public class JwtUtil {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
-
+    public String getUsernameFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject(); // Ambil username dari "sub" di JWT
+    }
     public Claims validateToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)

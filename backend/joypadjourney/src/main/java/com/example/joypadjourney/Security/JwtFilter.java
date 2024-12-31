@@ -1,9 +1,13 @@
 package com.example.joypadjourney.Security;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -44,6 +48,13 @@ public class JwtFilter extends OncePerRequestFilter {
                 Claims claims = jwtUtil.validateToken(token);
                 System.out.println("Token is valid. Claims: " + claims);
                 request.setAttribute("claims", claims); // Simpan claims jika diperlukan
+                String username = claims.getSubject();
+                String role = claims.get("role", String.class);
+
+        // Set authentication
+                UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(username, null, List.of(new SimpleGrantedAuthority(role)));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
             } catch (Exception e) {
                 System.err.println("Token validation failed: " + e.getMessage());
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

@@ -36,39 +36,47 @@ public class AdminService implements ReservationExtender{
 
     // Extend reservation
     @Override
-    public Reservation extendReservation(String reservationId, LocalDateTime newStart, LocalDateTime newEnd, String roomName) {
-        Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Reservation not found"));
+public Reservation extendReservation(String reservationId, LocalDateTime newStart, LocalDateTime newEnd, String roomName) {
+    
+    Reservation reservation = reservationRepository.findById(reservationId)
+            .orElseThrow(() -> new RuntimeException("Reservation not found"));
 
-        // Validasi waktu reservasi (hari ini dan masih ada waktu 30 menit)
-        LocalDateTime now = LocalDateTime.now();
-        if (!now.toLocalDate().equals(reservation.getStartDateTime().toLocalDate()) ||
-            reservation.getEndDateTime().isBefore(now.plusMinutes(30))) {
-            throw new RuntimeException("Extension not allowed. Reservation must be today and within 30 minutes.");
-        }
 
-        // Update waktu reservasi
-        newStart = reservation.getEndDateTime();
-        reservation.setStartDateTime(newStart);
-        reservation.setEndDateTime(newEnd);
-        Room room = roomRepository.findById(roomName)
-                .orElseThrow(() -> new RuntimeException("Room not found")); 
-        // Perbarui data reservasi
-        reservation.setRoom(room);
-        // Hitung ulang harga menggunakan ReservationService
-        double newPrice = reservationService.calculateTotalPrice(newStart, newEnd, reservation.getRoom().getPricePerHour());
-        reservation.setPrice(newPrice);
+    // Validasi waktu
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime extendDeadline = reservation.getEndDateTime().minusMinutes(30);
 
-        // Update status pembayaran jika ada
-        Payment payment = paymentRepository.findByReservation_ReservationID(reservationId)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
-        payment.setTotalPrice(newPrice);
-
-        reservationRepository.save(reservation);
-        paymentRepository.save(payment);
-
-        return reservation;
+    if (now.isBefore(reservation.getStartDateTime()) || now.isAfter(extendDeadline)) {
+        throw new RuntimeException("You can only extend your reservation after it starts and up to 30 minutes before it ends.");
     }
+
+    newStart = reservation.getEndDateTime();
+    boolean isRoomAvailable = reservationRepository.findByRoomAndTimeRange(roomName, newStart, newEnd).isEmpty();
+    if (!isRoomAvailable) {
+        throw new RuntimeException("Room is not available for the extended time.");
+    }
+
+    reservation.setEndDateTime(newEnd);
+
+    Room room = roomRepository.findById(roomName)
+            .orElseThrow(() -> new RuntimeException("Room not found"));
+
+    reservation.setRoom(room);
+
+    // Hitung ulang harga berdasarkan waktu baru
+    double newPrice = reservationService.calculateTotalPrice(newStart, newEnd, room.getPricePerHour());
+    reservation.setPrice(reservation.getPrice()+newPrice);
+
+    Payment payment = paymentRepository.findByReservation_ReservationID(reservationId)
+            .orElseThrow(() -> new RuntimeException("Payment not found"));
+    payment.setTotalPrice(newPrice);
+
+    reservationRepository.save(reservation);
+    paymentRepository.save(payment);
+
+    return reservation;
+}
+
 
     // Delete reservation
     public void deleteReservation(String reservationID) {
@@ -76,4 +84,8 @@ public class AdminService implements ReservationExtender{
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
         reservationRepository.delete(reservation);
     }
+    public List<Reservation> getAllReservations() {
+        return reservationRepository.findAll();
+    }
+    
 }

@@ -2,7 +2,9 @@ package com.example.joypadjourney.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -42,7 +44,7 @@ public class ReservationService {
     @Autowired
     private EmailService emailService;
     @Autowired
-    private NotificationService notificationService;
+    //private NotificationService notificationService;
     private final String jwtSecret = "your-256-bit-secret-your-256-bit-secret"; // Sesuaikan dengan kunci rahasia Anda
 
     public String extractUsernameFromToken(String token) {
@@ -105,22 +107,34 @@ public class ReservationService {
         payment.setStatusPayment("PENDING");
         
         paymentRepository.save(payment);
-        scheduleReservationNotification(user.getUsername(), room.getRoomName(), reservation);
+        //scheduleReservationNotification(user.getUsername(), room.getRoomName(), reservation);
         return reservation;
     }
-    public long getReservationCount(String username) {
-        return reservationRepository.countByUsername(username);
+    public int getReservationCount(String username) {
+        return reservationRepository.countCompletedReservationsByUser(username);
     }
+    
     // Hitung Total Harga
     public double calculateTotalPrice(LocalDateTime start, LocalDateTime end, double pricePerHour) {
         long hours = java.time.Duration.between(start, end).toHours();
         return hours * pricePerHour;
     }
-    public List<Room> getAvailableRooms(LocalDateTime start, LocalDateTime end) {
-        return roomRepository.findAvailableRooms(start, end);
-    }
-    // Kirim Reminder Email H-1 jam
-    @Scheduled(fixedRate = 3600000) // Cek setiap 1 jam
+    public List<Room> getAvailableRooms(LocalDateTime startDT, LocalDateTime endDT) {
+    // Ambil semua reservasi dalam rentang waktu
+    List<Reservation> reservations = reservationRepository.findReservationsBetween(startDT, endDT);
+
+    // Filter kamar yang tidak berstatus COMPLETED
+    List<Room> availableRooms = roomRepository.findAll().stream()
+            .filter(room -> reservations.stream()
+                    .noneMatch(reservation -> reservation.getRoom().equals(room) && 
+                                              !reservation.getStatus().equals("COMPLETED")))
+            .collect(Collectors.toList());
+
+    return availableRooms;
+}
+
+    // Kirim Reminder Email sebelum reservasi
+    @Scheduled(fixedRate =  3600000) // Cek setiap 1 jam
     public void sendReservationReminders() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime reminderTime = now.plusHours(1);
@@ -130,25 +144,30 @@ public class ReservationService {
                 .findByStartDateTimeBetween(now, reminderTime);
 
         for (Reservation reservation : reservations) {
-            // Ambil customer berdasarkan user
-            Customer customer = customerRepository.findByUser(reservation.getUser())
-                    .orElseThrow(() -> new RuntimeException("Customer not found"));
+            if ("PAID".equals(reservation.getStatus())) {
+                Optional<Customer> optionalCustomer = customerRepository.findById(reservation.getUser().getUsername());
+                if (optionalCustomer.isEmpty()) {
+                    System.err.println("Customer not found for user: " + reservation.getUser().getUsername());
+                    continue; 
+                }
+                Customer customer = optionalCustomer.get();
 
-            // Kirim email
-            String email = customer.getEmail();
-            String subject = "Reminder: Your Reservation is in 1 Hour!";
-            String body = "Hi " + customer.getUsername() + ",\n\n"
-                    + "This is a friendly reminder that your reservation for room "
-                    + reservation.getRoom().getRoomName() + " will start at "
-                    + reservation.getStartDateTime() + ".\n\n"
-                    + "Thank you!";
 
-            emailService.sendReminderEmail(email, subject, body);
-            System.out.println("Reminder sent to: " + email);
+                String email = customer.getEmail();
+                String subject = "Reminder: Your Reservation is about to start!";
+                String body = "Hi " + customer.getUsername() + ",\n\n"
+                        + "This is a friendly reminder that your reservation for room "
+                        + reservation.getRoom().getRoomName() + " will start at "
+                        + reservation.getStartDateTime() + ".\n\n"
+                        + "Thank you!";
+
+                emailService.sendReminderEmail(email, subject, body);
+                System.out.println("Reminder sent to: " + email);
+            }
         }
 
     }
-    private void scheduleReservationNotification(String username, String roomName, Reservation reservation) {
+    /*private void scheduleReservationNotification(String username, String roomName, Reservation reservation) {
         // Waktu notifikasi: 30 menit sebelum reservasi berakhir
         LocalDateTime notificationTime = reservation.getEndDateTime().minusMinutes(35);
     
@@ -159,8 +178,8 @@ public class ReservationService {
     
         // Jadwalkan pengiriman notifikasi menggunakan NotificationService
         notificationService.scheduleNotification(username, message, notificationTime);
-    }
-    // Periksa reservasi yang selesai setiap 1 jam
+    }*/
+    // Periksa reservasi yang selesai setiap 1 jam terus nanti diupdate otomatis
     @Scheduled(fixedRate = 3600000) // Setiap 1 jam
     @Transactional
     public void updateCompletedReservations() {
@@ -170,9 +189,12 @@ public class ReservationService {
         List<Reservation> reservations = reservationRepository.findByEndDateTimeBeforeAndStatusNot(now, "COMPLETED");
 
         for (Reservation reservation : reservations) {
-            // Perbarui status menjadi COMPLETED
-            reservation.setStatus("COMPLETED");
-            reservationRepository.save(reservation);
+            if ("PAID".equals(reservation.getStatus())){
+                // Perbarui status menjadi COMPLETED
+                reservation.setStatus("COMPLETED");
+                reservationRepository.save(reservation);
+            }
+            
         }
 
         System.out.println("Updated " + reservations.size() + " reservations to COMPLETED status.");
@@ -181,5 +203,6 @@ public class ReservationService {
         paymentRepository.deleteByReservationId(reservationID);
         reservationRepository.deleteById(reservationID);
     }
+    
     
 }

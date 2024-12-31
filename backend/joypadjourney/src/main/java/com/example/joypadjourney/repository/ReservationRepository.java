@@ -21,4 +21,22 @@ public interface ReservationRepository extends JpaRepository<Reservation, String
     // Cari reservasi yang berakhir sebelum waktu tertentu dan statusnya bukan COMPLETED
     @Query("SELECT r FROM Reservation r WHERE r.endDateTime < :currentDateTime AND r.status <> :status")
     List<Reservation> findByEndDateTimeBeforeAndStatusNot(LocalDateTime currentDateTime, String status);
+
+    @Query("SELECT r FROM Reservation r WHERE r.room.roomName = :roomName AND " +
+           "((r.startDateTime < :newEnd AND r.endDateTime > :newStart))")
+    List<Reservation> findByRoomAndTimeRange(@Param("roomName") String roomName,
+                                             @Param("newStart") LocalDateTime newStart,
+                                             @Param("newEnd") LocalDateTime newEnd);
+                                             @Query("SELECT COUNT(r) FROM Reservation r WHERE r.user.username = :username AND r.status = 'COMPLETED'")
+    int countCompletedReservationsByUser(@Param("username") String username);
+    @Query("SELECT r FROM Reservation r WHERE r.startDateTime < :endDT AND r.endDateTime > :startDT AND r.status != 'COMPLETED'")
+List<Reservation> findReservationsBetween(@Param("startDT") LocalDateTime startDT, @Param("endDT") LocalDateTime endDT);
+
+
+    @Query("SELECT r FROM Reservation r WHERE r.user.username = :username AND r.status = 'COMPLETED' AND NOT EXISTS (SELECT rev FROM Review rev WHERE rev.reservation = r)")
+    List<Reservation> findCompletedAndNotReviewedReservations(@Param("username") String username);
 }
+                                       
+
+
+
