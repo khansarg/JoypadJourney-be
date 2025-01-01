@@ -109,13 +109,9 @@ public Reservation extendReservation(String reservationId, LocalDateTime newStar
         throw new RuntimeException("You can only extend your own reservation.");
     }
 
-    // Validasi waktu
-    LocalDateTime now = LocalDateTime.now();
-    LocalDateTime extendDeadline = reservation.getEndDateTime().minusMinutes(30);
+    
 
-    if (now.isBefore(reservation.getStartDateTime()) || now.isAfter(extendDeadline)) {
-        throw new RuntimeException("You can only extend your reservation after it starts and up to 30 minutes before it ends.");
-    }
+    
 
     newStart = reservation.getEndDateTime();
     boolean isRoomAvailable = reservationRepository.findByRoomAndTimeRange(roomName, newStart, newEnd).isEmpty();
