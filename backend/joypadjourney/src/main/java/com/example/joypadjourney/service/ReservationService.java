@@ -36,6 +36,8 @@ public class ReservationService {
     private PaymentRepository paymentRepository;
     @Autowired
     private CustomerRepository customerRepository;
+    @Autowired
+    private AdminService adminService;
 
     @Autowired
     private RoomRepository roomRepository;
@@ -199,10 +201,13 @@ public class ReservationService {
                 reservation.setStatus("COMPLETED");
                 reservationRepository.save(reservation);
             }
-            System.out.println("waktu end "+ reservation.getEndDateTime());
-            System.out.println("waktu now "+ now);
+            
         }
-
+        List<Reservation> listreservations = adminService.getAllReservations();
+        for (Reservation reservation : listreservations) {
+            System.out.println("waktu end"+ reservation.getEndDateTime());
+            System.out.println("waktu now"+ now);
+        }
         System.out.println("Updated " + reservations.size() + " reservations to COMPLETED status.");
     }
     public void deleteReservationById(String reservationID) {
