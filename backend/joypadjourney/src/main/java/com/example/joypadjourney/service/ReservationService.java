@@ -199,7 +199,8 @@ public class ReservationService {
                 reservation.setStatus("COMPLETED");
                 reservationRepository.save(reservation);
             }
-            
+            System.out.println("waktu end "+ reservation.getEndDateTime());
+            System.out.println("waktu now "+ now);
         }
 
         System.out.println("Updated " + reservations.size() + " reservations to COMPLETED status.");
