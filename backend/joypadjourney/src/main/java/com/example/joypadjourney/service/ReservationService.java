@@ -36,8 +36,7 @@ public class ReservationService {
     private PaymentRepository paymentRepository;
     @Autowired
     private CustomerRepository customerRepository;
-    @Autowired
-    private AdminService adminService;
+
 
     @Autowired
     private RoomRepository roomRepository;
