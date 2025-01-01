@@ -203,13 +203,18 @@ public class ReservationService {
             }
             
         }
-        List<Reservation> listreservations = adminService.getAllReservations();
-        for (Reservation reservation : listreservations) {
-            System.out.println("waktu end"+ reservation.getEndDateTime());
-            System.out.println("waktu now"+ now);
+        List<Reservation> reservationslist = reservationRepository.findAll();
+
+        for (Reservation reservation : reservationslist) {
+        LocalDateTime endDateTime = reservation.getEndDateTime();
+
+        // Output waktu sekarang dan waktu akhir dari setiap reservasi
+        System.out.println("End Time: " + endDateTime);
+        System.out.println("Current Time (now): " + now);
         }
         System.out.println("Updated " + reservations.size() + " reservations to COMPLETED status.");
     }
+    
     public void deleteReservationById(String reservationID) {
         paymentRepository.deleteByReservationId(reservationID);
         reservationRepository.deleteById(reservationID);
