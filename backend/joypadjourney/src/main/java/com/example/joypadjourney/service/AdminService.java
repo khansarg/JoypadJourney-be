@@ -78,12 +78,6 @@ public Reservation extendReservation(String reservationId, LocalDateTime newStar
 }
 
 
-    // Delete reservation
-    public void deleteReservation(String reservationID) {
-        Reservation reservation = reservationRepository.findById(reservationID)
-                .orElseThrow(() -> new RuntimeException("Reservation not found"));
-        reservationRepository.delete(reservation);
-    }
     public List<Reservation> getAllReservations() {
         return reservationRepository.findAll();
     }

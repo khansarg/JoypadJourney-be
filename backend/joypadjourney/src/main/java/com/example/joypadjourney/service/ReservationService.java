@@ -43,7 +43,7 @@ public class ReservationService {
     private UserRepository userRepository;
     @Autowired
     private EmailService emailService;
-    @Autowired
+    //@Autowired
     //private NotificationService notificationService;
     private final String jwtSecret = "your-256-bit-secret-your-256-bit-secret"; // Sesuaikan dengan kunci rahasia Anda
 
