@@ -2,6 +2,7 @@ package com.example.joypadjourney.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +17,14 @@ import com.example.joypadjourney.model.ReservationExtender;
 import com.example.joypadjourney.model.entity.Customer;
 import com.example.joypadjourney.model.entity.Payment;
 import com.example.joypadjourney.model.entity.Reservation;
+import com.example.joypadjourney.model.entity.Review;
 import com.example.joypadjourney.model.entity.Role;
 import com.example.joypadjourney.model.entity.Room;
 import com.example.joypadjourney.model.entity.User;
 import com.example.joypadjourney.repository.CustomerRepository;
 import com.example.joypadjourney.repository.PaymentRepository;
 import com.example.joypadjourney.repository.ReservationRepository;
+import com.example.joypadjourney.repository.ReviewRepository;
 import com.example.joypadjourney.repository.RoomRepository;
 import com.example.joypadjourney.repository.UserRepository;
 
@@ -147,6 +150,38 @@ public Reservation extendReservation(String reservationId, LocalDateTime newStar
         return reservationRepository.findAll().stream()
                 .filter(reservation -> reservation.getUser().getUsername().equals(username))
                 .collect(Collectors.toList());
+    }
+    @Autowired
+    private ReviewRepository reviewRepository;
+
+
+    // Tambahkan review baru
+    public void addReview(Review review, String reservationID) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        // Validasi reservasi
+        Optional<Reservation> optionalReservation = reservationRepository.findByReservationIDAndUserUsername(reservationID, username);
+
+        if (optionalReservation.isEmpty()) {
+            throw new IllegalStateException("Reservation not found or does not belong to the user.");
+        }
+
+        Reservation reservation = optionalReservation.get();
+
+        //memastikan reservasi selesai
+        if (!"COMPLETED".equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalStateException("Cannot review a reservation that is not completed.");
+        }
+
+        //memaastikan review belum ada untuk reservasi ini
+        if (reviewRepository.existsByReservationReservationID(reservationID)) {
+            throw new IllegalStateException("Review already exists for this reservation.");
+        }
+
+        // nyiimpen review
+        review.setReservation(reservation);
+        review.setUser(reservation.getUser());
+        review.setTanggal(LocalDateTime.now());
+        reviewRepository.save(review);
     }
 }
 

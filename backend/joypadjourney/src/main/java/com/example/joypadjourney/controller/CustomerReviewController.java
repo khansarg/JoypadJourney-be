@@ -16,14 +16,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.joypadjourney.model.entity.Review;
 import com.example.joypadjourney.repository.ReviewRepository;
-import com.example.joypadjourney.service.ReviewService;
+import com.example.joypadjourney.service.CustomerService;
+
 
 @RestController
 @RequestMapping("/customer/reviews")
 public class CustomerReviewController {
 
     @Autowired
-    private ReviewService reviewService;
+    private CustomerService customerService;
 
     @Autowired
     private ReviewRepository reviewRepository;
@@ -35,7 +36,7 @@ public ResponseEntity<Map<String, String>> addReview(
         @PathVariable String reservationID,
         @RequestBody Review review) {
     try {
-        reviewService.addReview(review, reservationID);
+        customerService.addReview(review, reservationID);
         // Kembalikan JSON sebagai respons sukses
         Map<String, String> response = new HashMap<>();
         response.put("message", "Review added successfully!");
