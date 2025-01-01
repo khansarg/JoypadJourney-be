@@ -185,7 +185,7 @@ public class ReservationService {
         notificationService.scheduleNotification(username, message, notificationTime);
     }*/
     // Periksa reservasi yang selesai setiap 1 jam terus nanti diupdate otomatis
-    @Scheduled(fixedRate = 3600000) // Setiap 1 jam
+    @Scheduled(fixedRate = 600000) // Setiap 1 jam
     @Transactional
     public void updateCompletedReservations() {
         LocalDateTime now = LocalDateTime.now();
