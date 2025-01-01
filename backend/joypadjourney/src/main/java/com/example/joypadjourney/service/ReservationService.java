@@ -1,6 +1,7 @@
 package com.example.joypadjourney.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -136,6 +137,7 @@ public class ReservationService {
     // Kirim Reminder Email sebelum reservasi
     @Scheduled(fixedRate =  3600000) // Cek setiap 1 jam
     public void sendReservationReminders() {
+        ZoneId zoneIdAsiaJakarta = ZoneId.of("Asia/Jakarta");
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime reminderTime = now.plusHours(1);
 
@@ -151,14 +153,17 @@ public class ReservationService {
                     continue; 
                 }
                 Customer customer = optionalCustomer.get();
-
+                 LocalDateTime startDateTimeInAsiaJakarta = reservation.getStartDateTime()
+                    .atZone(ZoneId.systemDefault())
+                    .withZoneSameInstant(zoneIdAsiaJakarta)
+                    .toLocalDateTime();
 
                 String email = customer.getEmail();
                 String subject = "Reminder: Your Reservation is about to start!";
                 String body = "Hi " + customer.getUsername() + ",\n\n"
                         + "This is a friendly reminder that your reservation for room "
                         + reservation.getRoom().getRoomName() + " will start at "
-                        + reservation.getStartDateTime() + ".\n\n"
+                        + startDateTimeInAsiaJakarta
                         + "Thank you!";
 
                 emailService.sendReminderEmail(email, subject, body);
