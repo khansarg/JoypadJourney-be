@@ -136,7 +136,7 @@ public class ReservationService {
 }
 
     // Kirim Reminder Email sebelum reservasi
-    @Scheduled(fixedRate =  30000) // Cek setiap 1 jam
+    @Scheduled(fixedRate =  36000000) // Cek setiap 1 jam
     public void sendReservationReminders() {
         ZoneId zoneIdAsiaJakarta = ZoneId.of("Asia/Jakarta");
         LocalDateTime now = LocalDateTime.now(zoneIdAsiaJakarta);
