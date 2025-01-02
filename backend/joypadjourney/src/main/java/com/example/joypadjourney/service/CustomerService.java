@@ -172,7 +172,9 @@ public Reservation extendReservation(String reservationId, LocalDateTime newStar
         if (reviewRepository.existsByReservationReservationID(reservationID)) {
             throw new IllegalStateException("Review already exists for this reservation.");
         }
-
+    // Generate custom string ID
+    String reviewId = "REV-" + System.currentTimeMillis();
+    review.setReviewid(reviewId);
         // nyiimpen review
         review.setReservation(reservation);
         review.setUser(reservation.getUser());
