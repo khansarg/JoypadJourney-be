@@ -139,7 +139,7 @@ public class ReservationService {
     @Scheduled(fixedRate =  3600000) // Cek setiap 1 jam
     public void sendReservationReminders() {
         ZoneId zoneIdAsiaJakarta = ZoneId.of("Asia/Jakarta");
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(zoneIdAsiaJakarta);
         LocalDateTime reminderTime = now.plusHours(1);
 
         // Ambil reservasi yang akan dimulai dalam 1 jam
@@ -189,7 +189,8 @@ public class ReservationService {
     @Scheduled(fixedRate = 600000) // Setiap 1 jam
     @Transactional
     public void updateCompletedReservations() {
-        LocalDateTime now = LocalDateTime.now();
+        ZoneId zoneIdAsiaJakarta = ZoneId.of("Asia/Jakarta");
+        LocalDateTime now = LocalDateTime.now(zoneIdAsiaJakarta);
 
         // Ambil semua reservasi yang berakhir sebelum sekarang dan belum memiliki status COMPLETED
         List<Reservation> reservations = reservationRepository.findByEndDateTimeBeforeAndStatusNot(now, "COMPLETED");
