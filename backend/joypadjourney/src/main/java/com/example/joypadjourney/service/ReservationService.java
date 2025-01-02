@@ -154,10 +154,7 @@ public class ReservationService {
                     continue; 
                 }
                 Customer customer = optionalCustomer.get();
-                 LocalDateTime startDateTimeInAsiaJakarta = reservation.getStartDateTime()
-                    .atZone(ZoneId.systemDefault())
-                    .withZoneSameInstant(zoneIdAsiaJakarta)
-                    .toLocalDateTime();
+                 LocalDateTime startDateTimeInAsiaJakarta = reservation.getStartDateTime();
 
                 String email = customer.getEmail();
                 String subject = "Reminder: Your Reservation is about to start!";
